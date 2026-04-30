@@ -5,31 +5,15 @@
 <title>Geburtstagsüberraschung 🐴</title>
 
 <style>
+/* =========================
+   ALLGEMEIN
+========================= */
 body {
   margin: 0;
   font-family: Arial, sans-serif;
   text-align: center;
 }
 
-/* STARTSCREEN */
-#start {
-  height: 100vh;
-  background-image: url("toskana.jpg");
-  background-size: cover;
-  background-position: center;
-  color: white;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  background-color: rgba(0,0,0,0.4);
-}
-
-.overlay {
-  background: rgba(0,0,0,0.5);
-  padding: 20px;
-}
-
-/* BUTTON */
 button {
   padding: 12px 20px;
   font-size: 18px;
@@ -39,10 +23,56 @@ button {
   margin-top: 15px;
 }
 
-/* SPIEL */
-#levelScreen, #gameScreen, #reward {
-  display: none;
+img {
+  max-width: 80%;
+  margin-top: 20px;
+}
+
+/* =========================
+   NAME SCREEN
+========================= */
+#nameScreen {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+/* =========================
+   START SCREEN
+========================= */
+#start {
+  height: 100vh;
+  background-image: url("toskana.jpg");
+  background-size: cover;
+  background-position: center;
+  color: white;
+
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.overlay {
+  background: rgba(0,0,0,0.5);
   padding: 20px;
+}
+
+/* =========================
+   LEVEL + GAME
+========================= */
+#levelScreen,
+#gameScreen {
+  background-size: cover;
+  background-position: center;
+}
+
+#gameArea {
+  position: relative;
+  height: 80vh;
+  overflow: hidden;
+  border: 2px solid rgb(52, 197, 8);
 }
 
 .level {
@@ -56,14 +86,21 @@ button {
   background-color: lightgreen;
 }
 
-/* EMOJIS */
+/* Emojis im Spiel */
 .emoji {
   font-size: 50px;
   margin: 10px;
   cursor: pointer;
 }
 
-/* LOCK BUTTON */
+/* =========================
+   REWARD / GESCHENK
+========================= */
+#reward {
+  display: none;
+  padding: 20px;
+}
+
 #rewardBtn {
   background-color: grey;
   color: white;
@@ -72,32 +109,40 @@ button {
 #rewardBtn.unlocked {
   background-color: green;
 }
-
-img {
-  max-width: 80%;
-  margin-top: 20px;
-}
-
 </style>
 </head>
 
 <body>
 
-<!-- 1. START -->
+<!-- =========================
+     NAME INPUT SCREEN
+========================= -->
+<div id="nameScreen">
+  <h2>Gib deinen Namen ein:</h2>
+  <input type="text" id="nameInput" placeholder="Dein Name">
+  <br><br>
+  <button onclick="startWithName()">Starten</button>
+</div>
+
+<!-- =========================
+     START SCREEN
+========================= -->
 <div id="start">
   <div class="overlay">
-    <h1>🎉 Alles Gute zum Geburtstag 🎉</h1>
+    <h1>Alles Gute zum Geburtstag, <span id="nameDisplay"></span></h1>
     <p>Bevor du dein Geschenk bekommst,<br>
     musst du noch ein kleines Spiel spielen 😄</p>
     <button onclick="startGame()">Spiel starten</button>
   </div>
 </div>
 
-<!-- 2. LEVEL AUSWAHL -->
+<!-- =========================
+     LEVEL AUSWAHL
+========================= -->
 <div id="levelScreen">
-  <h2>Wähle ein Level 🐴</h2>
+  <h2>🐴 Wähle ein Level 🐴</h2>
 
-  <div id="level1" class="level" onclick="playLevel(1)">Level 1</div>
+  <div id="level1" class="level" onclick="playLevel(1)">Fang das Pferd!</div>
   <div id="level2" class="level" onclick="playLevel(2)">Level 2</div>
   <div id="level3" class="level" onclick="playLevel(3)">Level 3</div>
 
@@ -107,29 +152,74 @@ img {
   </button>
 </div>
 
-<!-- 3. SPIEL -->
+<!-- =========================
+     GAME SCREEN
+========================= -->
 <div id="gameScreen">
   <h2 id="gameTitle"></h2>
   <div id="gameArea"></div>
 </div>
 
-<!-- 4. GUTSCHEIN -->
+<!-- =========================
+     REWARD
+========================= -->
 <div id="reward">
   <h2>🎉 Dein Geschenk 🎉</h2>
   <img src="gutschein.jpg" alt="Gutschein">
 </div>
 
+<!-- =========================
+     AUDIO
+========================= -->
+<audio id="winSound" src="https://www.soundjay.com/nature_c2026/sounds/water-dripping-1.mp3"></audio>
+
 <script>
+
+/* =========================
+   GLOBAL VARIABLES
+========================= */
+let playerName = "";
 let completed = [false, false, false];
 let currentLevel = 0;
+let catchCount = 0;
+let stage = 1;
+let horse = null;
+let interval = null;
 
+/* =========================
+   NAME LOGIC
+========================= */
+function startWithName() {
+  let input = document.getElementById("nameInput").value;
+
+  if (input.trim() === "") {
+    alert("Bitte gib einen Namen ein 😄");
+    return;
+  }
+
+  playerName = input;
+
+  document.getElementById("nameDisplay").innerText = playerName;
+
+  document.getElementById("nameScreen").style.display = "none";
+  document.getElementById("start").style.display = "flex";
+}
+
+/* =========================
+   START GAME
+========================= */
 function startGame() {
   document.getElementById("start").style.display = "none";
   document.getElementById("levelScreen").style.display = "block";
 }
 
+/* =========================
+   LEVEL SELECT
+========================= */
 function playLevel(level) {
+
   currentLevel = level;
+
   document.getElementById("levelScreen").style.display = "none";
   document.getElementById("gameScreen").style.display = "block";
 
@@ -138,67 +228,199 @@ function playLevel(level) {
 
   area.innerHTML = "";
 
+  /* LEVEL 1 */
   if (level === 1) {
-    title.innerText = "Finde das Pferd";
-    addAnimals(["🐶","🐱","🐴","🐸"]);
+    area.style.backgroundImage = "url('level1.jpg')";
+    title.innerText = "Fang das Pferd! 🐎 (5 Runden)";
+    startStage();
   }
 
+  /* LEVEL 2 */
   if (level === 2) {
-  title.innerText = "Merke dir die Reihenfolge!";
+    area.style.backgroundImage = "url('level2.jpg')";
+    title.innerText = "Finde das Pferd in 3 Sekunden! ⏱️";
 
-  let sequence = ["🐴","🐶","🐴"];
-  alert("Merke dir: " + sequence.join(" "));
+    let animals = ["🐶","🐱","🐴","🐸","🐷","🐰"];
 
-  setTimeout(() => {
-    area.innerHTML = "";
+    animals.forEach(animal => {
+      let span = document.createElement("span");
+      span.className = "emoji";
+      span.innerText = animal;
 
-    let options = ["🐴","🐶","🐱"];
+      span.onclick = function () {
+        if (animal === "🐴") winLevel();
+      };
+
+      area.appendChild(span);
+    });
+
+    setTimeout(() => {
+      alert("Zu langsam 😄 Versuch es nochmal!");
+      document.getElementById("gameScreen").style.display = "none";
+      document.getElementById("levelScreen").style.display = "block";
+    }, 3000);
+  }
+
+  /* LEVEL 3 */
+  if (level === 3) {
+    area.style.backgroundImage = "url('level3.jpg')";
+    title.innerText = "Klicke die richtige Reihenfolge 🧩";
+
+    let sequence = ["🐴","🐎","🐴"];
+    let user = [];
+    let options = ["🐴","🐎","🐶"];
+
+    alert("Reihenfolge merken: " + sequence.join(" "));
 
     options.forEach(animal => {
       let span = document.createElement("span");
       span.className = "emoji";
       span.innerText = animal;
 
-      span.onclick = function() {
-        if (animal === sequence[0]) {
-          winLevel();
-        } else {
-          alert("Falscher Start 😄");
+      span.onclick = function () {
+        user.push(animal);
+
+        if (user[user.length - 1] !== sequence[user.length - 1]) {
+          alert("Falsch 😄");
+          user = [];
+          return;
         }
+
+        if (user.length === sequence.length) winLevel();
       };
 
       area.appendChild(span);
     });
-
-  }, 2000);
-}
-
-  if (level === 3) {
-    title.innerText = "Finde das richtige Pferd";
-    addAnimals(["🐴","🐴","🐴","🐶","🐱"]);
   }
 }
 
-function addAnimals(list) {
+/* =========================
+   GAME STAGE (LEVEL 1)
+========================= */
+function startStage() {
+
   let area = document.getElementById("gameArea");
+  area.innerHTML = "";
 
-  list.forEach(animal => {
-    let span = document.createElement("span");
-    span.className = "emoji";
-    span.innerText = animal;
+  area.style.position = "relative";
 
-    span.onclick = function() {
-      if (animal === "🐴") {
-        winLevel();
-      } else {
-        alert("Falsch 😄");
-      }
+  horse = document.createElement("div");
+  horse.innerText = "🐎";
+  horse.style.position = "absolute";
+  horse.style.cursor = "pointer";
+  horse.style.left = "100px";
+  horse.style.top = "100px";
+
+  area.appendChild(horse);
+
+  function moveAnimal(animal) {
+    let rect = area.getBoundingClientRect();
+
+    let x = Math.random() * (rect.width - 60);
+    let y = Math.random() * (rect.height - 60);
+
+    animal.style.left = x + "px";
+    animal.style.top = y + "px";
+  }
+
+  function createFake() {
+    let fake = document.createElement("div");
+    fake.innerText = "🐗";
+    fake.style.position = "absolute";
+    fake.style.fontSize = "50px";
+    fake.style.cursor = "pointer";
+    fake.style.left = "100px";
+    fake.style.top = "100px";
+
+    fake.onclick = function () {
+      alert("Falsches Pferd 😄");
     };
 
-    area.appendChild(span);
-  });
+    document.getElementById("gameArea").appendChild(fake);
+    return fake;
+  }
+
+  switch (catchCount) {
+
+    case 0:
+      horse.style.fontSize = "50px";
+      moveAnimal(horse);
+      interval = setInterval(() => moveAnimal(horse), 800);
+      break;
+
+    case 1:
+      horse.style.fontSize = "30px";
+      moveAnimal(horse);
+      interval = setInterval(() => moveAnimal(horse), 800);
+      break;
+
+    case 2:
+      horse.style.fontSize = "30px";
+
+      let fake1 = createFake();
+
+      moveAnimal(fake1);
+      setInterval(() => moveAnimal(fake1), 600);
+
+      moveAnimal(horse);
+      interval = setInterval(() => moveAnimal(horse), 800);
+      break;
+
+    case 3:
+      horse.style.fontSize = "30px";
+
+      let fake2 = createFake();
+      let fake3 = createFake();
+
+      moveAnimal(fake2);
+      moveAnimal(fake3);
+
+      setInterval(() => moveAnimal(fake2), 600);
+      setInterval(() => moveAnimal(fake3), 600);
+
+      moveAnimal(horse);
+      interval = setInterval(() => moveAnimal(horse), 800);
+      break;
+
+    case 4:
+      horse.style.fontSize = "20px";
+
+      let fake4 = createFake();
+      let fake5 = createFake();
+      let fake6 = createFake();
+
+      moveAnimal(fake4);
+      moveAnimal(fake5);
+      moveAnimal(fake6);
+
+      setInterval(() => moveAnimal(fake4), 600);
+      setInterval(() => moveAnimal(fake5), 600);
+      setInterval(() => moveAnimal(fake6), 600);
+
+      moveAnimal(horse);
+      interval = setInterval(() => moveAnimal(horse), 800);
+      break;
+  }
+
+  horse.onclick = function () {
+    clearInterval(interval);
+    horse.remove();
+
+    catchCount++;
+
+    if (catchCount >= 5) {
+      winLevel();
+    } else {
+      stage++;
+      alert("Gefangen! 😄 " + catchCount + "/5");
+      startStage();
+    }
+  };
 }
 
+/* =========================
+   WIN LOGIC
+========================= */
 function winLevel() {
   alert("Level geschafft! 🎉");
 
@@ -211,9 +433,10 @@ function winLevel() {
 }
 
 function updateLevels() {
-  completed.forEach((done, index) => {
+
+  completed.forEach((done, i) => {
     if (done) {
-      document.getElementById("level" + (index+1)).classList.add("done");
+      document.getElementById("level" + (i + 1)).classList.add("done");
     }
   });
 
@@ -225,10 +448,14 @@ function updateLevels() {
   }
 }
 
+/* =========================
+   REWARD
+========================= */
 function showReward() {
   document.getElementById("levelScreen").style.display = "none";
   document.getElementById("reward").style.display = "block";
 }
+
 </script>
 
 </body>
