@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <title>Geburtstagsüberraschung 🎁</title>
+  <style>
+    body {
+      font-family: Arial;
+      text-align: center;
+      background: #f5f5f5;
+    }
+    .emoji {
+      font-size: 50px;
+      cursor: pointer;
+      margin: 20px;
+    }
+    #gutschein {
+      display: none;
+      margin-top: 30px;
+      font-size: 24px;
+      color: green;
+    }
+  </style>
+</head>
+<body>
+
+<h1>Finde das richtige Tier 🐾</h1>
+<p>Klicke auf das Tier, das dich zu deiner Überraschung bringt!</p>
+
+<div>
+  <span class="emoji" onclick="falsch()">🐶</span>
+  <span class="emoji" onclick="falsch()">🐱</span>
+  <span class="emoji" onclick="richtig()">🐴</span>
+  <span class="emoji" onclick="falsch()">🐸</span>
+</div>
+
+<div id="gutschein">
+  🎉 Herzlichen Glückwunsch! 🎉<br><br>
+  Du bekommst:<br>
+  🐴 Einen Ausritt! 🐴
+</div>
+
+<script>
+function falsch() {
+  alert("Nope 😄 Versuch es nochmal!");
+}
+
+function richtig() {
+  document.getElementById("gutschein").style.display = "block";
+}
+</script>
+
+</body>
+</html>
