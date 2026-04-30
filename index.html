@@ -144,9 +144,34 @@ function playLevel(level) {
   }
 
   if (level === 2) {
-    title.innerText = "Finde das Pferd (schwerer)";
-    addAnimals(["🐶","🐴","🐱","🐸","🐴","🐷"]);
-  }
+  title.innerText = "Merke dir die Reihenfolge!";
+
+  let sequence = ["🐴","🐶","🐴"];
+  alert("Merke dir: " + sequence.join(" "));
+
+  setTimeout(() => {
+    area.innerHTML = "";
+
+    let options = ["🐴","🐶","🐱"];
+
+    options.forEach(animal => {
+      let span = document.createElement("span");
+      span.className = "emoji";
+      span.innerText = animal;
+
+      span.onclick = function() {
+        if (animal === sequence[0]) {
+          winLevel();
+        } else {
+          alert("Falscher Start 😄");
+        }
+      };
+
+      area.appendChild(span);
+    });
+
+  }, 2000);
+}
 
   if (level === 3) {
     title.innerText = "Finde das richtige Pferd";
