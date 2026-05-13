@@ -2,202 +2,418 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Geburtstagsüberraschung 🐴</title>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
 
 <style>
 /* =========================
-   ALLGEMEIN
+   CSS VARIABLEN
 ========================= */
-body {
+:root {
+  --pink:    #ffb3c6;
+  --yellow:  #fff0a0;
+  --green:   #b5ead7;
+  --blue:    #a0d4ff;
+  --purple:  #d4b0ff;
+  --peach:   #ffd6a5;
+  --text:    #4a3728;
+  --white:   #fffaf5;
+  --shadow:  0 4px 20px rgba(100,60,30,0.15);
+  --radius:  18px;
+}
+
+/* =========================
+   RESET & ALLGEMEIN
+========================= */
+*, *::before, *::after { box-sizing: border-box; }
+
+html, body {
   margin: 0;
-  font-family: Arial, sans-serif;
-  text-align: center;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  font-family: 'Nunito', sans-serif;
+  color: var(--text);
+  background: var(--white);
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
 }
 
-button {
-  padding: 12px 20px;
+h1, h2, h3 {
+  font-family: 'Fredoka One', cursive;
+  margin: 0 0 10px;
+  line-height: 1.2;
+}
+
+/* =========================
+   SCREENS (alle versteckt außer nameScreen)
+========================= */
+.screen {
+  display: none;
+  position: absolute;
+  inset: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+.screen.active { display: flex; }
+
+/* =========================
+   HINTERGRUND-DEKOR
+========================= */
+.bubbles {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  overflow: hidden;
+}
+.bubble {
+  position: absolute;
+  border-radius: 50%;
+  opacity: 0.25;
+  animation: float linear infinite;
+}
+@keyframes float {
+  0%   { transform: translateY(100vh) scale(1); opacity: 0.2; }
+  100% { transform: translateY(-150px) scale(1.1); opacity: 0; }
+}
+
+/* =========================
+   BUTTONS
+========================= */
+.btn {
+  display: inline-block;
+  padding: 14px 30px;
   font-size: 18px;
+  font-family: 'Fredoka One', cursive;
   border: none;
-  border-radius: 10px;
+  border-radius: 50px;
   cursor: pointer;
-  margin-top: 15px;
+  margin-top: 16px;
+  letter-spacing: 0.5px;
+  transition: transform 0.12s, box-shadow 0.12s;
+  box-shadow: 0 4px 0 rgba(0,0,0,0.12);
+  -webkit-appearance: none;
+  touch-action: manipulation;
 }
+.btn:active { transform: translateY(3px); box-shadow: 0 1px 0 rgba(0,0,0,0.12); }
 
-img {
-  max-width: 80%;
-  margin-top: 20px;
-}
+.btn-pink   { background: var(--pink);   color: var(--text); }
+.btn-green  { background: var(--green);  color: var(--text); }
+.btn-yellow { background: var(--yellow); color: var(--text); }
+.btn-blue   { background: var(--blue);   color: var(--text); }
+.btn-purple { background: var(--purple); color: var(--text); }
+.btn-peach  { background: var(--peach);  color: var(--text); }
+.btn-grey   { background: #ddd;          color: #999;        cursor: not-allowed; }
+.btn-grey:active { transform: none; box-shadow: 0 4px 0 rgba(0,0,0,0.12); }
 
 /* =========================
    NAME SCREEN
 ========================= */
 #nameScreen {
-  height: 100vh;
-  display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
+  padding: 30px 24px;
+  background: linear-gradient(160deg, #fff0a0 0%, #ffb3c6 50%, #d4b0ff 100%);
 }
+#nameScreen h2 {
+  font-size: clamp(22px, 6vw, 32px);
+  color: var(--text);
+  text-align: center;
+  margin-bottom: 20px;
+}
+.horse-big { font-size: 80px; margin-bottom: 10px; animation: bounce 1.2s ease-in-out infinite; }
+@keyframes bounce {
+  0%,100% { transform: translateY(0); }
+  50%      { transform: translateY(-12px); }
+}
+#nameInput {
+  width: 100%;
+  max-width: 320px;
+  padding: 14px 20px;
+  font-size: 18px;
+  font-family: 'Nunito', sans-serif;
+  border: 3px solid var(--pink);
+  border-radius: 50px;
+  text-align: center;
+  background: rgba(255,255,255,0.85);
+  outline: none;
+  color: var(--text);
+  -webkit-appearance: none;
+}
+#nameInput:focus { border-color: var(--purple); }
 
 /* =========================
    START SCREEN
 ========================= */
 #start {
-  height: 100vh;
-  background-image: url("toskana.jpg");
-  background-size: cover;
-  background-position: center;
-  color: white;
-
-  display: flex;
   flex-direction: column;
   justify-content: center;
+  align-items: center;
+  text-align: center;
+  padding: 30px 24px;
 }
-
-.overlay {
-  background: rgba(0,0,0,0.5);
-  padding: 20px;
-}
-
-/* =========================
-   LEVEL + GAME
-========================= */
-#levelScreen,
-#gameScreen {
+#start::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: url('toskana.jpg');
   background-size: cover;
   background-position: center;
+  filter: brightness(0.55) saturate(1.2);
 }
-
-#gameArea {
+.start-content {
   position: relative;
-  height: 80vh;
+  z-index: 1;
+  background: rgba(255,255,255,0.18);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-radius: 24px;
+  padding: 30px 24px;
+  max-width: 420px;
+  width: 100%;
+  border: 1.5px solid rgba(255,255,255,0.4);
+}
+#start h1 {
+  font-size: clamp(24px, 7vw, 38px);
+  color: white;
+  text-shadow: 0 2px 8px rgba(0,0,0,0.4);
+}
+#start p  { color: rgba(255,255,255,0.92); font-size: 16px; line-height: 1.6; }
+
+/* =========================
+   LEVEL SCREEN
+========================= */
+#levelScreen {
+  flex-direction: column;
+  align-items: center;
+  padding: 30px 20px 40px;
+  background: linear-gradient(180deg, #fff9e6 0%, #ffd6e8 100%);
+}
+#levelScreen h2 {
+  font-size: clamp(22px, 6vw, 30px);
+  margin-bottom: 20px;
+  text-align: center;
+}
+.level-card {
+  width: 100%;
+  max-width: 380px;
+  background: white;
+  border-radius: var(--radius);
+  padding: 18px 22px;
+  margin: 8px 0;
+  cursor: pointer;
+  box-shadow: var(--shadow);
+  transition: transform 0.15s, box-shadow 0.15s;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  font-size: 17px;
+  font-weight: 700;
+  border: 2.5px solid transparent;
+}
+.level-card:active { transform: scale(0.97); }
+.level-card .lv-icon { font-size: 34px; flex-shrink: 0; }
+.level-card .lv-info { text-align: left; }
+.level-card .lv-sub  { font-size: 12px; color: #999; font-weight: 600; margin-top: 2px; }
+.level-card.done     { border-color: #4caf50; background: #f0fff4; }
+.level-card.done::after { content: '✅'; margin-left: auto; font-size: 22px; }
+.level-card:not(.done):nth-child(2) { border-color: var(--pink);   }
+.level-card:not(.done):nth-child(3) { border-color: var(--blue);   }
+.level-card:not(.done):nth-child(4) { border-color: var(--purple); }
+
+#rewardBtn {
+  margin-top: 24px;
+  width: 100%;
+  max-width: 380px;
+  font-size: 20px;
+  padding: 18px;
+}
+#rewardBtn.unlocked { background: linear-gradient(135deg, #ffd700, #ff9800); color: white; animation: pulse 1.5s ease-in-out infinite; }
+@keyframes pulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.04)} }
+
+/* =========================
+   GAME SCREEN
+========================= */
+#gameScreen {
+  flex-direction: column;
+  background: #fff9e6;
+}
+.game-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px 8px;
+  flex-shrink: 0;
+}
+.game-header h2 {
+  font-size: clamp(16px, 4.5vw, 22px);
+  margin: 0;
+  flex: 1;
+  text-align: center;
+}
+.back-btn {
+  background: rgba(0,0,0,0.08);
+  border: none;
+  border-radius: 50%;
+  width: 38px;
+  height: 38px;
+  font-size: 18px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+#timer-badge {
+  background: white;
+  border-radius: 20px;
+  padding: 5px 12px;
+  font-size: 15px;
+  font-weight: 700;
+  box-shadow: var(--shadow);
+  flex-shrink: 0;
+}
+#gameArea {
+  flex: 1;
+  position: relative;
   overflow: hidden;
-  border: 2px solid rgb(52, 197, 8);
+  margin: 0 12px 12px;
+  border-radius: var(--radius);
+  border: 3px solid var(--pink);
+  background: var(--yellow);
 }
 
-/* GRID MODUS NUR FÜR LEVEL 2 */
+/* GRID MODE (Level 1) */
 #gameArea.gridMode {
   display: grid;
   grid-template-columns: repeat(auto-fill, 30px);
   grid-auto-rows: 30px;
-
-  gap: 0;              /* wichtig: keine Lücken */
+  gap: 0;
   justify-content: start;
   align-content: start;
+  overflow-y: auto;
 }
 
-/*Für Level 3*/
-/* 3 unsichtbare Spuren */
-.lane {
-  position: absolute;
-  top: 0;
-  width: 33.33%;
-  height: 100%;
-}
-
-#laneLeft { left: 0; }
-#laneMid { left: 33.33%; }
-#laneRight { left: 66.66%; }
-
-/* Pferd */
+/* Level 3 Pferd */
 #horse {
   position: absolute;
-  bottom: 40px;
-  font-size: 40px;
-  transition: left 0.2s ease;
+  bottom: 50px;
+  font-size: 42px;
+  transition: left 0.18s cubic-bezier(.34,1.56,.64,1);
+  filter: drop-shadow(0 4px 6px rgba(0,0,0,0.2));
+  z-index: 10;
 }
-
-/* Hindernis */
 .obstacle {
   position: absolute;
-  top: -50px;
-  font-size: 40px;
+  font-size: 38px;
+  z-index: 5;
 }
 
-#timer {
+/* Level 3 Swipe-Buttons */
+#swipeHint {
   position: absolute;
-  top: 10px;
-  left: 10px;
-  font-size: 20px;
-  color: black;
-  background: rgba(255,255,255,0.7);
-  padding: 5px 10px;
-  border-radius: 8px;
-}
-
-.level {
-  margin: 10px;
-  padding: 10px;
-  border: 2px solid black;
-  cursor: pointer;
-}
-
-.done {
-  background-color: lightgreen;
-}
-
-/* Emojis im Spiel */
-.emoji {
-  font-size: 50px;
-  margin: 10px;
-  cursor: pointer;
+  bottom: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  color: rgba(0,0,0,0.4);
+  font-size: 12px;
+  white-space: nowrap;
+  z-index: 20;
+  pointer-events: none;
 }
 
 /* =========================
-   REWARD / GESCHENK
+   REWARD SCREEN
 ========================= */
 #reward {
-  display: none;
-  padding: 20px;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 24px;
+  background: linear-gradient(160deg, #fff0a0, #ffb3c6, #d4b0ff);
+  text-align: center;
 }
-
-#rewardBtn {
-  background-color: grey;
-  color: white;
+#reward h2 {
+  font-size: clamp(28px, 8vw, 42px);
+  color: var(--text);
+  animation: pop 0.5s cubic-bezier(.34,1.56,.64,1) both;
 }
-
-#rewardBtn.unlocked {
-  background-color: green;
+@keyframes pop { from{transform:scale(0)} to{transform:scale(1)} }
+#reward img {
+  max-width: min(90%, 360px);
+  border-radius: 20px;
+  box-shadow: 0 8px 30px rgba(0,0,0,0.18);
+  margin-top: 20px;
+  animation: pop 0.6s 0.2s cubic-bezier(.34,1.56,.64,1) both;
 }
+.confetti-row { font-size: 32px; margin: 10px 0; letter-spacing: 6px; animation: wiggle 1s ease-in-out infinite; }
+@keyframes wiggle { 0%,100%{transform:rotate(-5deg)} 50%{transform:rotate(5deg)} }
 </style>
 </head>
 
 <body>
 
+<!-- Floating bubbles background -->
+<div class="bubbles" id="bubbles"></div>
+
 <!-- =========================
-     NAME INPUT SCREEN
+     NAME SCREEN
 ========================= -->
-<div id="nameScreen">
-  <h2>Gib deinen Namen ein:</h2>
-  <input type="text" id="nameInput" placeholder="Dein Name">
-  <br><br>
-  <button onclick="startWithName()">Starten</button>
+<div id="nameScreen" class="screen active">
+  <div class="horse-big">🐴</div>
+  <h2>Gib deinen Namen ein!</h2>
+  <input type="text" id="nameInput" placeholder="Dein Name ✨" autocomplete="off">
+  <button class="btn btn-pink" onclick="startWithName()">Los geht's! 🎉</button>
 </div>
 
 <!-- =========================
      START SCREEN
 ========================= -->
-<div id="start">
-  <div class="overlay">
-    <h1>Alles Gute zum Geburtstag, <span id="nameDisplay"></span></h1>
-    <p>Bevor du dein Geschenk bekommst,<br>
-    musst du noch ein kleines Spiel spielen 😄</p>
-    <button onclick="startGame()">Spiel starten</button>
+<div id="start" class="screen">
+  <div class="start-content">
+    <h1>Alles Gute,<br><span id="nameDisplay"></span>! 🎂</h1>
+    <p>Bevor du dein Geschenk bekommst,<br>musst du noch ein kleines Spiel spielen 😄🐴</p>
+    <button class="btn btn-yellow" onclick="startGame()">Spiel starten 🐎</button>
   </div>
 </div>
 
 <!-- =========================
-     LEVEL AUSWAHL
+     LEVEL SCREEN
 ========================= -->
-<div id="levelScreen">
+<div id="levelScreen" class="screen">
   <h2>🐴 Wähle ein Level 🐴</h2>
 
-  <div id="level1" class="level" onclick="playLevel(1)">Finde das Pferd!</div>
-  <div id="level2" class="level" onclick="playLevel(2)">Fang das Pferd!</div>
-  <div id="level3" class="level" onclick="playLevel(3)">Reite das Pferd!</div>
+  <div id="level1" class="level-card" onclick="playLevel(1)">
+    <span class="lv-icon">🔍</span>
+    <div class="lv-info">
+      <div>Finde das Pferd!</div>
+      <div class="lv-sub">Level 1 · Such-Spiel</div>
+    </div>
+  </div>
 
-  <br>
-  <button id="rewardBtn" onclick="showReward()" disabled>
+  <div id="level2" class="level-card" onclick="playLevel(2)">
+    <span class="lv-icon">🏃</span>
+    <div class="lv-info">
+      <div>Fang das Pferd!</div>
+      <div class="lv-sub">Level 2 · Fang-Spiel</div>
+    </div>
+  </div>
+
+  <div id="level3" class="level-card" onclick="playLevel(3)">
+    <span class="lv-icon">🏇</span>
+    <div class="lv-info">
+      <div>Reite das Pferd!</div>
+      <div class="lv-sub">Level 3 · Ausweich-Spiel</div>
+    </div>
+  </div>
+
+  <button id="rewardBtn" class="btn btn-grey" onclick="showReward()" disabled>
     🔒 Geschenk freischalten
   </button>
 </div>
@@ -205,26 +421,46 @@ img {
 <!-- =========================
      GAME SCREEN
 ========================= -->
-<div id="gameScreen">
-  <h2 id="gameTitle"></h2>
-  <div id="timer">⏱️ 0s</div>
+<div id="gameScreen" class="screen">
+  <div class="game-header">
+    <button class="back-btn" onclick="backToLevels()">←</button>
+    <h2 id="gameTitle"></h2>
+    <div id="timer-badge">⏱️ 0s</div>
+  </div>
   <div id="gameArea"></div>
 </div>
 
 <!-- =========================
      REWARD
 ========================= -->
-<div id="reward">
-  <h2>🎉 Dein Geschenk 🎉</h2>
+<div id="reward" class="screen">
+  <div class="confetti-row">🎉🎊🎈</div>
+  <h2>Dein Geschenk!</h2>
   <img src="gutschein.jpg" alt="Gutschein">
+  <div class="confetti-row">🐴💝✨</div>
 </div>
 
-<!-- =========================
-     AUDIO
-========================= -->
-<audio id="winSound" src="https://www.soundjay.com/nature_c2026/sounds/water-dripping-1.mp3"></audio>
-
 <script>
+/* =========================
+   BUBBLE GENERATOR
+========================= */
+(function() {
+  const container = document.getElementById('bubbles');
+  const colors = ['#ffb3c6','#fff0a0','#b5ead7','#a0d4ff','#d4b0ff','#ffd6a5'];
+  for (let i = 0; i < 18; i++) {
+    const b = document.createElement('div');
+    b.className = 'bubble';
+    const size = 30 + Math.random() * 80;
+    b.style.cssText = `
+      width:${size}px; height:${size}px;
+      background:${colors[Math.floor(Math.random()*colors.length)]};
+      left:${Math.random()*100}%;
+      animation-duration:${6+Math.random()*10}s;
+      animation-delay:${Math.random()*8}s;
+    `;
+    container.appendChild(b);
+  }
+})();
 
 /* =========================
    GLOBAL VARIABLES
@@ -233,7 +469,6 @@ let playerName = "";
 let completed = [false, false, false];
 let currentLevel = 0;
 let catchCount = 0;
-let stage = 1;
 let horse = null;
 let interval = null;
 let survivalTime = 0;
@@ -241,360 +476,258 @@ let gameRunning = true;
 let bestTime = 0;
 let spawnSpeed = 900;
 let level3Completed = false;
+let timerInterval = null;
+
+/* =========================
+   SCREEN MANAGEMENT
+========================= */
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+/* =========================
+   BACK BUTTON
+========================= */
+function backToLevels() {
+  gameRunning = false;
+  clearInterval(interval);
+  clearInterval(timerInterval);
+  showScreen('levelScreen');
+}
 
 /* =========================
    NAME LOGIC
 ========================= */
 function startWithName() {
-  let input = document.getElementById("nameInput").value;
-
-  if (input.trim() === "") {
-    alert("Bitte gib einen Namen ein 😄");
-    return;
-  }
-
+  let input = document.getElementById("nameInput").value.trim();
+  if (!input) { alert("Bitte gib einen Namen ein 😄"); return; }
   playerName = input;
-
   document.getElementById("nameDisplay").innerText = playerName;
-
-  document.getElementById("nameScreen").style.display = "none";
-  document.getElementById("start").style.display = "flex";
+  showScreen('start');
 }
 
 /* =========================
    START GAME
 ========================= */
-function startGame() {
-  document.getElementById("start").style.display = "none";
-  document.getElementById("levelScreen").style.display = "block";
-}
+function startGame() { showScreen('levelScreen'); }
 
 /* =========================
    LEVEL SELECT
 ========================= */
 function playLevel(level) {
-
   currentLevel = level;
-
-  document.getElementById("levelScreen").style.display = "none";
-  document.getElementById("gameScreen").style.display = "block";
+  showScreen('gameScreen');
 
   let area = document.getElementById("gameArea");
   let title = document.getElementById("gameTitle");
 
   area.innerHTML = "";
+  area.className = "";
+  area.style.backgroundImage = "";
+  document.getElementById("timer-badge").innerText = "⏱️ 0s";
 
+  gameRunning = true;
+  clearInterval(timerInterval);
 
-  /* LEVEL 1 */
+  /* ---- LEVEL 1 ---- */
   if (level === 1) {
-
     area.classList.add("gridMode");
     area.style.backgroundImage = "url('level1.jpg')";
-    title.innerText = "Finde das Pferd! 🐴";
+    title.innerText = "🔍 Finde das Pferd!";
 
     let animals = [
       "🐄","🐂","🐃","🐖","🐷","🐑","🐐","🐓","🐔","🐣","🐤","🐥",
       "🐶","🐕","🐩","🐱","🐈","🐹","🐰","🐇",
-      "🐸","🐢","🦎","🐍",
-      "🐘","🦁","🐯","🐻","🐨","🐼","🦊","🦝","🐺","🦓","🦒",
-      "🐦","🐧","🦉","🦅","🦆",
-      "🐟","🐠","🐡","🦈","🐙","🐚","🦀","🦞"
+      "🐸","🐢","🦎","🐍","🐘","🦁","🐯","🐻","🐨","🐼","🦊","🦝",
+      "🐺","🦓","🦒","🐦","🐧","🦉","🦅","🦆","🐟","🐠","🐡","🦈","🐙","🦀","🦞"
     ];
-    
-    let cellSize = 30;
 
+    let cellSize = 30;
     let rect = area.getBoundingClientRect();
     let cols = Math.floor(rect.width / cellSize);
     let rows = Math.floor(rect.height / cellSize);
     let total = cols * rows;
-
     let horseIndex = Math.floor(Math.random() * total);
 
     for (let i = 0; i < total; i++) {
-
-      let animal;
-
-      // 🐴 genau 1 Pferd
-      if (i === horseIndex) {
-        animal = "🐴";
-      } else {
-        animal = animals[Math.floor(Math.random() * animals.length)];
-      }
-
+      let animal = (i === horseIndex) ? "🐴" : animals[Math.floor(Math.random() * animals.length)];
       let span = document.createElement("span");
       span.innerText = animal;
-
-      span.style.fontSize = "18px";
-      span.style.display = "flex";
-      span.style.alignItems = "center";
-      span.style.justifyContent = "center";
-
+      span.style.cssText = "font-size:18px;display:flex;align-items:center;justify-content:center;cursor:pointer;";
       span.onclick = () => {
         if (animal === "🐴") winLevel();
-        else alert("Falsch 😄");
+        else { span.style.animation = "none"; span.style.opacity="0.3"; }
       };
-
       area.appendChild(span);
     }
   }
 
-  /* LEVEL 2 */
+  /* ---- LEVEL 2 ---- */
   if (level === 2) {
     area.style.backgroundImage = "url('level2.jpg')";
-    title.innerText = "Fang das Pferd!";
+    title.innerText = "🏃 Fang das Pferd!";
+    catchCount = 0;
     startStage();
   }
 
-  /* LEVEL 3 */
+  /* ---- LEVEL 3 ---- */
   if (level === 3) {
-
     area.style.backgroundImage = "url('level3.jpg')";
-    title.innerText = "Weiche den Hindernissen aus! 🐎";
-
-    area.innerHTML = "";
+    title.innerText = "🏇 Weiche aus!";
 
     survivalTime = 0;
     gameRunning = true;
     spawnSpeed = 900;
+    level3Completed = false;
 
-    // 🐎 Pferd
-    let horse = document.createElement("div");
-    horse.id = "horse";
-    horse.innerText = "🐎";
-    area.appendChild(horse);
+    let horseEl = document.createElement("div");
+    horseEl.id = "horse";
+    horseEl.innerText = "🐎";
+    area.appendChild(horseEl);
+
+    // Swipe hint
+    let hint = document.createElement("div");
+    hint.id = "swipeHint";
+    hint.innerText = "👈 Wischen zum Lenken 👉";
+    area.appendChild(hint);
+    setTimeout(() => { if(hint.parentNode) hint.remove(); }, 3000);
 
     let lane = 1;
-
     function updateLane() {
       let w = area.clientWidth;
-
-      if (lane === 0) horse.style.left = w * 0.15 + "px";
-      if (lane === 1) horse.style.left = w * 0.45 + "px";
-      if (lane === 2) horse.style.left = w * 0.75 + "px";
+      horseEl.style.left = [w*0.1, w*0.42, w*0.74][lane] + "px";
     }
-
     updateLane();
 
+    // Keyboard
     document.addEventListener("keydown", (e) => {
-      if (e.key === "ArrowLeft") lane = Math.max(0, lane - 1);
+      if (!gameRunning) return;
+      if (e.key === "ArrowLeft")  lane = Math.max(0, lane - 1);
       if (e.key === "ArrowRight") lane = Math.min(2, lane + 1);
       updateLane();
     });
 
-    area.onclick = () => {
-      lane = (lane + 1) % 3;
-      updateLane();
-    };
-
-    // 🧱 verschiedene Hindernisse
-    let obstacles = ["🌵", "🪨", "🐄"];
-
-    function spawnObstacle() {
-
+    // Swipe
+    let touchStartX = 0;
+    area.addEventListener("touchstart", (e) => { touchStartX = e.touches[0].clientX; }, { passive: true });
+    area.addEventListener("touchend", (e) => {
       if (!gameRunning) return;
+      let dx = e.changedTouches[0].clientX - touchStartX;
+      if (Math.abs(dx) > 40) {
+        lane = dx < 0 ? Math.max(0, lane - 1) : Math.min(2, lane + 1);
+        updateLane();
+      }
+    }, { passive: true });
 
+    let obstacles = ["🌵","🪨","🐄","🌳","🪵"];
+    function spawnObstacle() {
+      if (!gameRunning) return;
       let obs = document.createElement("div");
-      obs.classList.add("obstacle");
-
-      let type = obstacles[Math.floor(Math.random() * obstacles.length)];
-      obs.innerText = type;
-
+      obs.className = "obstacle";
+      obs.innerText = obstacles[Math.floor(Math.random() * obstacles.length)];
       let obsLane = Math.floor(Math.random() * 3);
       let w = area.clientWidth;
-
-      if (obsLane === 0) obs.style.left = w * 0.15 + "px";
-      if (obsLane === 1) obs.style.left = w * 0.45 + "px";
-      if (obsLane === 2) obs.style.left = w * 0.75 + "px";
-
+      obs.style.left = [w*0.1, w*0.42, w*0.74][obsLane] + "px";
       area.appendChild(obs);
 
       let pos = -50;
-
+      let areaH = area.clientHeight;
       let move = setInterval(() => {
-
-        if (!gameRunning) {
-          clearInterval(move);
-          return;
-        }
-
+        if (!gameRunning) { clearInterval(move); obs.remove(); return; }
         pos += 6;
         obs.style.top = pos + "px";
+        if (pos > areaH) { clearInterval(move); obs.remove(); return; }
 
-        let h = horse.getBoundingClientRect();
+        let h = horseEl.getBoundingClientRect();
         let o = obs.getBoundingClientRect();
-
-        if (
-          h.left < o.right &&
-          h.right > o.left &&
-          h.top < o.bottom &&
-          h.bottom > o.top
-        ) {
+        if (h.left < o.right && h.right > o.left && h.top < o.bottom && h.bottom > o.top) {
           gameRunning = false;
           clearInterval(move);
-
-          alert("Verloren 😄");
-          document.getElementById("gameScreen").style.display = "none";
-          document.getElementById("levelScreen").style.display = "block";
+          clearInterval(timerInterval);
+          setTimeout(() => {
+            alert("Verloren 😄 Du hast " + survivalTime + "s überlebt!");
+            showScreen('levelScreen');
+          }, 100);
         }
-
       }, 20);
 
-      // 📈 Schwierigkeit steigt automatisch
       spawnSpeed = Math.max(300, spawnSpeed - 5);
-
-      setTimeout(spawnObstacle, spawnSpeed);
+      if (gameRunning) setTimeout(spawnObstacle, spawnSpeed);
     }
-
     spawnObstacle();
 
-    // ⏱️ Timer + Win nach 20s (aber Spiel läuft weiter)
-    let timer = setInterval(() => {
-
-      if (!gameRunning) {
-        clearInterval(timer);
-        return;
-      }
-
+    timerInterval = setInterval(() => {
+      if (!gameRunning) { clearInterval(timerInterval); return; }
       survivalTime++;
-
-      document.getElementById("timer").innerText =
-        "⏱️ " + survivalTime + "s";
-
-      // 🏆 nur einmal markieren, aber NICHT stoppen
+      document.getElementById("timer-badge").innerText = "⏱️ " + survivalTime + "s";
       if (survivalTime >= 20 && !level3Completed) {
         level3Completed = true;
-
-        // nur Level als geschafft markieren
         completed[2] = true;
         updateLevels();
       }
-
-      if (survivalTime > bestTime) {
-        bestTime = survivalTime;
-      }
-
+      if (survivalTime > bestTime) bestTime = survivalTime;
     }, 1000);
   }
 }
 
 /* =========================
-   GAME STAGE (LEVEL 1)
+   LEVEL 2: CATCH GAME
 ========================= */
 function startStage() {
-
   let area = document.getElementById("gameArea");
   area.innerHTML = "";
 
-  area.style.position = "relative";
-
   horse = document.createElement("div");
   horse.innerText = "🐎";
-  horse.style.position = "absolute";
-  horse.style.cursor = "pointer";
-  horse.style.left = "100px";
-  horse.style.top = "100px";
-
+  horse.style.cssText = "position:absolute;cursor:pointer;";
   area.appendChild(horse);
 
-  function moveAnimal(animal) {
+  function moveAnimal(el) {
     let rect = area.getBoundingClientRect();
-
-    let x = Math.random() * (rect.width - 60);
-    let y = Math.random() * (rect.height - 60);
-
-    animal.style.left = x + "px";
-    animal.style.top = y + "px";
+    el.style.left = Math.random() * (rect.width - 60) + "px";
+    el.style.top  = Math.random() * (rect.height - 60) + "px";
   }
 
   function createFake() {
     let fake = document.createElement("div");
     fake.innerText = "🐗";
-    fake.style.position = "absolute";
-    fake.style.fontSize = "50px";
-    fake.style.cursor = "pointer";
-    fake.style.left = "100px";
-    fake.style.top = "100px";
-
-    fake.onclick = function () {
+    fake.style.cssText = "position:absolute;font-size:50px;cursor:pointer;";
+    fake.onclick = () => {
+      fake.style.transform = "scale(1.3)";
+      setTimeout(() => fake.style.transform = "", 200);
       alert("Falsches Pferd 😄");
     };
-
-    document.getElementById("gameArea").appendChild(fake);
+    area.appendChild(fake);
     return fake;
   }
 
-  switch (catchCount) {
+  let configs = [
+    { size: "50px", speed: 800, fakes: 0 },
+    { size: "30px", speed: 700, fakes: 0 },
+    { size: "30px", speed: 700, fakes: 1 },
+    { size: "30px", speed: 600, fakes: 2 },
+    { size: "20px", speed: 500, fakes: 3 },
+  ];
 
-    case 0:
-      horse.style.fontSize = "50px";
-      moveAnimal(horse);
-      interval = setInterval(() => moveAnimal(horse), 800);
-      break;
+  let cfg = configs[Math.min(catchCount, configs.length - 1)];
+  horse.style.fontSize = cfg.size;
+  moveAnimal(horse);
+  interval = setInterval(() => moveAnimal(horse), cfg.speed);
 
-    case 1:
-      horse.style.fontSize = "30px";
-      moveAnimal(horse);
-      interval = setInterval(() => moveAnimal(horse), 800);
-      break;
-
-    case 2:
-      horse.style.fontSize = "30px";
-
-      let fake1 = createFake();
-
-      moveAnimal(fake1);
-      setInterval(() => moveAnimal(fake1), 600);
-
-      moveAnimal(horse);
-      interval = setInterval(() => moveAnimal(horse), 800);
-      break;
-
-    case 3:
-      horse.style.fontSize = "30px";
-
-      let fake2 = createFake();
-      let fake3 = createFake();
-
-      moveAnimal(fake2);
-      moveAnimal(fake3);
-
-      setInterval(() => moveAnimal(fake2), 600);
-      setInterval(() => moveAnimal(fake3), 600);
-
-      moveAnimal(horse);
-      interval = setInterval(() => moveAnimal(horse), 800);
-      break;
-
-    case 4:
-      horse.style.fontSize = "20px";
-
-      let fake4 = createFake();
-      let fake5 = createFake();
-      let fake6 = createFake();
-
-      moveAnimal(fake4);
-      moveAnimal(fake5);
-      moveAnimal(fake6);
-
-      setInterval(() => moveAnimal(fake4), 600);
-      setInterval(() => moveAnimal(fake5), 600);
-      setInterval(() => moveAnimal(fake6), 600);
-
-      moveAnimal(horse);
-      interval = setInterval(() => moveAnimal(horse), 800);
-      break;
+  for (let i = 0; i < cfg.fakes; i++) {
+    let f = createFake();
+    moveAnimal(f);
+    setInterval(() => moveAnimal(f), cfg.speed - 100);
   }
 
   horse.onclick = function () {
     clearInterval(interval);
     horse.remove();
-
     catchCount++;
-
     if (catchCount >= 5) {
       winLevel();
     } else {
-      stage++;
       alert("Gefangen! 😄 " + catchCount + "/5");
       startStage();
     }
@@ -602,32 +735,25 @@ function startStage() {
 }
 
 /* =========================
-   WIN LOGIC
+   WIN / LEVELS UPDATE
 ========================= */
 function winLevel() {
-  alert("Level geschafft! 🎉");
-
   completed[currentLevel - 1] = true;
-
-  document.getElementById("gameScreen").style.display = "none";
-  document.getElementById("levelScreen").style.display = "block";
-
+  alert("Level geschafft! 🎉");
+  showScreen('levelScreen');
   updateLevels();
 }
 
 function updateLevels() {
-
   completed.forEach((done, i) => {
-    if (done) {
-      document.getElementById("level" + (i + 1)).classList.add("done");
-    }
+    let el = document.getElementById("level" + (i + 1));
+    if (done) el.classList.add("done");
   });
-
   if (completed.every(v => v)) {
     let btn = document.getElementById("rewardBtn");
     btn.disabled = false;
-    btn.classList.add("unlocked");
-    btn.innerText = "🎁 Geschenk öffnen";
+    btn.className = "btn unlocked";
+    btn.innerText = "🎁 Geschenk öffnen!";
   }
 }
 
@@ -635,11 +761,8 @@ function updateLevels() {
    REWARD
 ========================= */
 function showReward() {
-  document.getElementById("levelScreen").style.display = "none";
-  document.getElementById("reward").style.display = "block";
+  showScreen('reward');
 }
-
 </script>
-
 </body>
 </html>

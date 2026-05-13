@@ -1,0 +1,842 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <title>Geburtstagsüberraschung 🐴</title>
+
+  <style>
+    /* =====================================================
+       ALLGEMEINE RESET-REGELN
+       box-sizing: border-box bedeutet, dass Abstände (padding)
+       INNERHALB der angegebenen Breite/Höhe berechnet werden –
+       das verhindert ungewolltes Überlappen von Elementen.
+       margin: 0 / padding: 0 entfernt alle Browser-Standardabstände.
+    ===================================================== */
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    /* =====================================================
+       HAUPT-CONTAINER (#app)
+       Alle Screens (Name, Start, Level, Spiel, Belohnung)
+       sind Kinder dieses Containers.
+       min-height sorgt dafür, dass die App nie kleiner als
+       500px hoch ist – auch wenn der Inhalt kürzer ist.
+    ===================================================== */
+    #app {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      min-height: 500px;
+      position: relative;
+    }
+
+    /* =====================================================
+       SCREEN-SYSTEM
+       Jeder „Bildschirm" (Name eingeben, Level wählen usw.)
+       ist ein <div> mit der Klasse .screen.
+       Standardmäßig sind alle Screens unsichtbar (display: none).
+       Nur der Screen mit der Klasse .active wird angezeigt.
+       flex + align/justify center = Inhalte werden
+       vertikal & horizontal mittig ausgerichtet.
+    ===================================================== */
+    .screen {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 500px;
+      padding: 2rem;
+    }
+    .screen.active { display: flex; } /* aktiver Screen wird sichtbar */
+
+    /* =====================================================
+       ÜBERSCHRIFTEN & TEXT
+    ===================================================== */
+    h1 { font-size: 22px; font-weight: 500; margin-bottom: .75rem; }
+    h2 { font-size: 18px; font-weight: 500; margin-bottom: .75rem; }
+    p  { font-size: 15px; line-height: 1.6; margin-bottom: 1rem; color: #555; }
+
+    /* =====================================================
+       BUTTONS (.btn)
+       Alle Buttons haben dieselbe Basis-Klasse.
+       Zusätzliche Klassen wie .btn-primary oder .btn-success
+       überschreiben Farbe und Hintergrund.
+       transform: scale(0.98) beim Klicken gibt ein
+       leichtes "Eindrücken"-Gefühl.
+    ===================================================== */
+    .btn {
+      display: inline-block;
+      padding: 10px 22px;
+      font-size: 15px;
+      font-weight: 500;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      cursor: pointer;
+      background: white;
+      color: #333;
+      transition: background .15s, transform .1s;
+      margin: 6px;
+    }
+    .btn:hover   { background: #f5f5f5; }
+    .btn:active  { transform: scale(0.98); }
+
+    /* Blau-lila Variante (Hauptaktion) */
+    .btn-primary { background: #7F77DD; color: white; border-color: #7F77DD; }
+    .btn-primary:hover { background: #534AB7; color: white; }
+
+    /* Grüne Variante (Erfolg / Geschenk öffnen) */
+    .btn-success { background: #1D9E75; color: white; border-color: #1D9E75; }
+    .btn-success:hover { background: #0F6E56; color: white; }
+
+    /* Ausgegraut (noch nicht freigeschalten) */
+    .btn-disabled { opacity: .4; cursor: not-allowed; }
+
+    /* =====================================================
+       TEXTEINGABE (Name-Feld)
+    ===================================================== */
+    input[type=text] {
+      padding: 10px 14px;
+      font-size: 15px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      width: 220px;
+      margin-bottom: 1rem;
+    }
+
+    /* =====================================================
+       LEVEL-KARTEN
+       Jedes Level wird als anklickbare Karte dargestellt.
+       .done = Level bereits erfolgreich abgeschlossen (grün).
+    ===================================================== */
+    .level-card {
+      background: white;
+      border: 1px solid #ddd;
+      border-radius: 12px;
+      padding: 1rem 1.5rem;
+      margin: 8px 0;
+      width: 280px;
+      cursor: pointer;
+      transition: border-color .15s, background .15s;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .level-card:hover { border-color: #aaa; background: #fafafa; }
+    .level-card.done  { border-color: #1D9E75; background: #E1F5EE; }
+
+    /* Icon links in der Karte */
+    .level-card .licon { font-size: 24px; min-width: 32px; }
+
+    /* Text-Block rechts in der Karte */
+    .level-card .linfo { text-align: left; }
+    .level-card .ltitle { font-size: 15px; font-weight: 500; color: #222; }
+    .level-card .ldesc  { font-size: 13px; color: #777; }
+    .level-card.done .ltitle { color: #0F6E56; }
+
+    /* =====================================================
+       SPIELBEREICH (#gameArea)
+       Der eigentliche Spielbereich, in dem alle
+       Spielelemente (Pferd, Hindernisse, Tiere) erscheinen.
+       position: relative ist wichtig, damit Kindelemente
+       mit position: absolute relativ zu diesem Bereich
+       positioniert werden können.
+       overflow: hidden blendet alles aus, was außerhalb liegt.
+    ===================================================== */
+    #gameArea {
+      position: relative;
+      width: 100%;
+      height: 380px;
+      overflow: hidden;
+      border: 1px solid #ddd;
+      border-radius: 12px;
+      background: #f9f9f9;
+      margin: 1rem 0;
+    }
+
+    /* =====================================================
+       GRID-MODUS (Level 1)
+       Wenn Level 1 läuft, wird dem Spielbereich die Klasse
+       .grid-mode hinzugefügt. Dann werden die Tier-Emojis
+       automatisch in einem Raster angeordnet.
+       grid-template-columns und grid-auto-rows werden
+       per JavaScript dynamisch gesetzt.
+    ===================================================== */
+    #gameArea.grid-mode {
+      display: grid;
+      gap: 0;
+      align-content: start;
+      justify-content: start;
+      overflow: hidden;
+    }
+
+    /* Einzelne Zelle im Level-1-Raster */
+    .cell {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 16px;
+      transition: background .1s;
+      border-radius: 4px;
+    }
+    .cell:hover { background: rgba(127, 119, 221, .15); } /* leicht lila beim Hover */
+
+    /* =====================================================
+       PFERD IN LEVEL 3 (#horse-l3)
+       position: absolute = wird relativ zum #gameArea positioniert.
+       transition: left 0.18s = wechselt die Spur mit einer
+       sanften Animation (nicht sofort).
+    ===================================================== */
+    #horse-l3 {
+      position: absolute;
+      bottom: 36px;        /* Pferd steht immer am unteren Rand */
+      font-size: 36px;
+      transition: left .18s ease;
+    }
+
+    /* Hindernisse in Level 3 */
+    .obs {
+      position: absolute;
+      font-size: 32px;
+      /* top wird per JavaScript animiert (fällt von oben) */
+    }
+
+    /* Pferd in Level 2 (beweglich, anklickbar) */
+    .horse-catch {
+      position: absolute;
+      font-size: 36px;
+      cursor: pointer;
+      transition: all .15s;
+      user-select: none; /* verhindert ungewolltes Markieren beim Klicken */
+    }
+
+    /* Falsche Tiere in Level 2 (Ablenkung) */
+    .fake-animal {
+      position: absolute;
+      font-size: 36px;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    /* =====================================================
+       FORTSCHRITTS-PUNKTE (Level 2)
+       5 Punkte zeigen, wie viele Pferde schon gefangen wurden.
+       .filled = bereits gefangen (lila statt grau).
+    ===================================================== */
+    .progress-dots { display: flex; gap: 8px; margin: 8px 0; }
+    .dot        { width: 10px; height: 10px; border-radius: 50%; background: #ccc; }
+    .dot.filled { background: #7F77DD; }
+
+    /* Statusmeldung unter dem Spieltitel */
+    .msg {
+      font-size: 14px;
+      color: #666;
+      min-height: 20px;
+      margin-bottom: .5rem;
+    }
+
+    /* Timer-Anzeige (oben links im Spiel) */
+    #timerBadge {
+      display: inline-block;
+      background: white;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      padding: 4px 12px;
+      font-size: 13px;
+      color: #555;
+      margin-bottom: .5rem;
+    }
+
+    /* =====================================================
+       BELOHNUNGS-BOX (Geschenk-Screen)
+    ===================================================== */
+    .reward-box {
+      background: white;
+      border: 1px solid #ddd;
+      border-radius: 12px;
+      padding: 2rem;
+      max-width: 340px;
+      text-align: center;
+    }
+    .big-emoji { font-size: 56px; margin-bottom: 1rem; }
+
+    /* Kleines farbiges Label ("Alle 3 Level geschafft!") */
+    .tag {
+      display: inline-block;
+      background: #EEEDFE;
+      color: #3C3489;
+      font-size: 12px;
+      padding: 3px 10px;
+      border-radius: 8px;
+      margin-bottom: .75rem;
+    }
+  </style>
+</head>
+
+<body>
+<div id="app">
+
+  <!-- =====================================================
+       SCREEN 1: NAME EINGEBEN
+       Der erste Screen, den die Spielerin sieht.
+       onkeydown im <script> erlaubt auch Enter-Taste.
+  ===================================================== -->
+  <div id="s-name" class="screen active">
+    <div style="font-size:48px;margin-bottom:1rem">🐴</div>
+    <h1>Geburtstagsüberraschung</h1>
+    <p>Gib deinen Namen ein, um zu starten!</p>
+    <input type="text" id="nameInput" placeholder="Dein Name" maxlength="30">
+    <br>
+    <!-- onclick ruft die Funktion doName() im Script auf -->
+    <button class="btn btn-primary" onclick="doName()">Weiter</button>
+  </div>
+
+  <!-- =====================================================
+       SCREEN 2: WILLKOMMENS-SCREEN
+       Zeigt den personalisierten Namen und den Start-Button.
+       <span id="nameDisplay"> wird per JS befüllt.
+  ===================================================== -->
+  <div id="s-start" class="screen">
+    <div style="font-size:56px;margin-bottom:1rem">🎂</div>
+    <h1>Alles Gute zum Geburtstag,<br>
+      <span id="nameDisplay" style="color:#7F77DD"></span>!
+    </h1>
+    <p>Bevor du dein Geschenk bekommst,<br>musst du drei kleine Spiele bestehen. 😄</p>
+    <button class="btn btn-primary" onclick="showLevels()">Spiel starten</button>
+  </div>
+
+  <!-- =====================================================
+       SCREEN 3: LEVEL-AUSWAHL
+       Drei Karten für die drei Level.
+       Der Belohnungs-Button ist zunächst deaktiviert (.btn-disabled).
+       Er wird erst per JS aktiv, wenn alle Level geschafft sind.
+  ===================================================== -->
+  <div id="s-levels" class="screen">
+    <h2>Wähle ein Level</h2>
+
+    <div id="lc1" class="level-card" onclick="playLevel(1)">
+      <span class="licon">🔍</span>
+      <div class="linfo">
+        <div class="ltitle">Level 1 – Finde das Pferd</div>
+        <div class="ldesc">Suche zwischen vielen Tieren</div>
+      </div>
+    </div>
+
+    <div id="lc2" class="level-card" onclick="playLevel(2)">
+      <span class="licon">🤝</span>
+      <div class="linfo">
+        <div class="ltitle">Level 2 – Fang das Pferd</div>
+        <div class="ldesc">5 Mal erwischen, wird schwerer</div>
+      </div>
+    </div>
+
+    <div id="lc3" class="level-card" onclick="playLevel(3)">
+      <span class="licon">🏇</span>
+      <div class="linfo">
+        <div class="ltitle">Level 3 – Reite das Pferd</div>
+        <div class="ldesc">20 Sekunden überleben</div>
+      </div>
+    </div>
+
+    <br>
+    <!-- Belohnungs-Button: startet deaktiviert, wird von updateLevelCards() freigeschaltet -->
+    <button id="rewardBtn" class="btn btn-disabled" disabled onclick="showReward()">
+      🔒 Geschenk freischalten
+    </button>
+  </div>
+
+  <!-- =====================================================
+       SCREEN 4: SPIEL-SCREEN
+       Dieser Screen wird für alle 3 Level verwendet.
+       Nur der Inhalt von #gameArea ändert sich je nach Level.
+       #timerBadge zeigt die verstrichene Zeit in Level 3.
+       #msg zeigt kurze Statusmeldungen ans.
+       #progress-wrap zeigt die Fortschritts-Punkte (nur Level 2).
+  ===================================================== -->
+  <div id="s-game" class="screen" style="padding:1rem">
+    <h2 id="gameTitle"></h2>            <!-- Level-Titel, wird per JS gesetzt -->
+    <div id="timerBadge">⏱ 0s</div>    <!-- Timer-Anzeige -->
+    <div id="msg" class="msg"></div>    <!-- Status-Nachrichten -->
+
+    <!-- Spielbereich: wird je nach Level komplett neu befüllt -->
+    <div id="gameArea"></div>
+
+    <!-- Fortschritts-Punkte (nur Level 2 sichtbar) -->
+    <div id="progress-wrap" style="display:none;flex-direction:column;align-items:center;gap:4px">
+      <div class="progress-dots" id="dots"></div>
+      <span style="font-size:12px;color:#777" id="catchLabel"></span>
+    </div>
+
+    <!-- Zurück-Button zum Level-Auswahlscreen -->
+    <button class="btn" style="margin-top:.75rem" onclick="goLevels()">← Zurück</button>
+  </div>
+
+  <!-- =====================================================
+       SCREEN 5: BELOHNUNGS-SCREEN
+       Wird angezeigt, wenn alle 3 Level geschafft sind.
+       Hier kannst du deinen echten Gutschein-Inhalt eintragen.
+  ===================================================== -->
+  <div id="s-reward" class="screen">
+    <div class="reward-box">
+      <div class="big-emoji">🎁</div>
+      <div class="tag">Alle 3 Level geschafft!</div>
+      <h2 style="margin-bottom:.5rem">Herzlichen Glückwunsch!</h2>
+      <p style="margin-bottom:1.5rem">Du hast dir dein Geschenk verdient.<br>Viel Spaß beim Einlösen! 🐴✨</p>
+      <!-- Gutschein-Bereich: Inhalt hier anpassen! -->
+      <div style="background:#f9f9f9;border:1px solid #ddd;border-radius:8px;padding:1.5rem;font-size:15px;font-weight:500">
+        🎟️ Gutschein<br>
+        <span style="font-size:13px;font-weight:400;color:#777">(hier deinen echten Gutschein-Text eintragen)</span>
+      </div>
+    </div>
+  </div>
+
+</div><!-- Ende #app -->
+
+<script>
+  /* =====================================================
+     GLOBALE VARIABLEN
+     Diese Variablen sind im gesamten Script verfügbar
+     und speichern den aktuellen Spielstand.
+  ===================================================== */
+
+  let playerName   = "";             // Name der Spielerin
+  let completed    = [false, false, false]; // Welche Level sind abgeschlossen?
+  let currentLevel = 0;              // Welches Level wird gerade gespielt?
+
+  // Level-2-Variablen
+  let catchCount   = 0;             // Wie viele Pferde wurden in Level 2 gefangen?
+  let catchInterval = null;         // Interval-ID für die Pferd-Bewegung
+
+  // Level-3-Variablen
+  let gameRunning  = false;         // Läuft Level 3 gerade?
+  let survivalTime = 0;             // Wie viele Sekunden überlebt?
+  let level3Done   = false;         // Level 3 schon als bestanden markiert?
+  let spawnSpeed   = 900;           // Millisekunden zwischen neuen Hindernissen (wird kleiner = schwerer)
+  let lane         = 1;             // Aktuelle Spur des Pferdes (0=links, 1=mitte, 2=rechts)
+  let horseEl      = null;          // Referenz auf das Pferd-Element in Level 3
+  let timerInterval = null;         // Interval-ID für den Sekunden-Timer
+  let spawnTimeout  = null;         // Timeout-ID für das nächste Hindernis
+
+
+  /* =====================================================
+     HILFSFUNKTIONEN
+  ===================================================== */
+
+  // Blendet alle Screens aus und zeigt nur den mit der angegebenen ID
+  function show(id) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+  }
+
+  // Setzt den Text der Statusmeldungs-Box
+  function setMsg(text) {
+    document.getElementById('msg').textContent = text;
+  }
+
+  // Aktualisiert die Timer-Anzeige
+  function setTimer(sek) {
+    document.getElementById('timerBadge').textContent = '⏱ ' + sek + 's';
+  }
+
+
+  /* =====================================================
+     NAME EINGEBEN (Screen 1 → Screen 2)
+  ===================================================== */
+  function doName() {
+    let v = document.getElementById('nameInput').value.trim();
+    if (!v) { alert('Bitte gib einen Namen ein 😊'); return; }
+
+    playerName = v;
+    // Setzt den personalisierten Namen im Willkommens-Screen
+    document.getElementById('nameDisplay').textContent = playerName;
+    show('s-start'); // Weiter zum Willkommens-Screen
+  }
+
+
+  /* =====================================================
+     LEVEL-AUSWAHL ANZEIGEN
+     Stoppt alle laufenden Spiele und zeigt die Level-Übersicht.
+  ===================================================== */
+  function showLevels() {
+    stopAll();
+    updateLevelCards();
+    show('s-levels');
+  }
+
+  // Kurzform: zurück zur Level-Auswahl (z.B. über den Zurück-Button)
+  function goLevels() { stopAll(); showLevels(); }
+
+
+  /* =====================================================
+     ALLES STOPPEN
+     Wird aufgerufen, wenn der Spieler ein Level verlässt
+     oder zu einem anderen Screen wechselt.
+     Verhindert, dass Timer/Intervals im Hintergrund weiterlaufen.
+  ===================================================== */
+  function stopAll() {
+    gameRunning = false;
+    clearInterval(catchInterval); catchInterval = null;
+    clearInterval(timerInterval); timerInterval = null;
+    clearTimeout(spawnTimeout);   spawnTimeout  = null;
+    // Event-Listener für Tastatur-Steuerung (Level 3) entfernen
+    document.removeEventListener('keydown', keyHandler);
+  }
+
+
+  /* =====================================================
+     LEVEL-KARTEN AKTUALISIEREN
+     Fügt abgeschlossenen Levels die Klasse .done hinzu (grüner Rand).
+     Schaltet den Belohnungs-Button frei, wenn alle 3 Level erledigt sind.
+  ===================================================== */
+  function updateLevelCards() {
+    ['lc1', 'lc2', 'lc3'].forEach((id, i) => {
+      let el = document.getElementById(id);
+      if (completed[i]) el.classList.add('done');
+      else el.classList.remove('done');
+    });
+
+    // Prüfen: Sind wirklich ALLE 3 Level abgeschlossen?
+    if (completed.every(v => v)) {
+      let btn = document.getElementById('rewardBtn');
+      btn.disabled = false;
+      btn.classList.remove('btn-disabled');
+      btn.classList.add('btn-success');
+      btn.textContent = '🎁 Geschenk öffnen';
+    }
+  }
+
+
+  /* =====================================================
+     BELOHNUNGS-SCREEN ANZEIGEN
+     Nur möglich, wenn alle 3 Level geschafft wurden.
+  ===================================================== */
+  function showReward() {
+    if (completed.every(v => v)) show('s-reward');
+  }
+
+
+  /* =====================================================
+     EIN LEVEL STARTEN
+     Bereitet den Spiel-Screen vor und ruft
+     die passende Level-Funktion auf.
+  ===================================================== */
+  function playLevel(lvl) {
+    stopAll();                  // Vorherige Spiele stoppen
+    currentLevel = lvl;
+    setTimer(0);                // Timer auf 0 zurücksetzen
+    setMsg('');                 // Statusmeldung leeren
+
+    let area = document.getElementById('gameArea');
+    area.innerHTML = '';        // Spielbereich komplett leeren
+    area.className  = '';       // Alle CSS-Klassen entfernen (z.B. grid-mode)
+
+    // Fortschritts-Punkte verstecken (nur Level 2 zeigt sie)
+    document.getElementById('progress-wrap').style.display = 'none';
+
+    show('s-game'); // Spiel-Screen anzeigen
+
+    // Je nach Level-Nummer die richtige Setup-Funktion aufrufen
+    if (lvl === 1) setupLevel1(area);
+    if (lvl === 2) setupLevel2(area);
+    if (lvl === 3) setupLevel3(area);
+  }
+
+
+  /* =====================================================
+     LEVEL 1: FINDE DAS PFERD
+     Füllt den Spielbereich mit einem Raster aus Tier-Emojis.
+     Genau eines davon ist das gesuchte Pferd (🐴).
+     Die Spielerin muss es anklicken.
+  ===================================================== */
+  function setupLevel1(area) {
+    document.getElementById('gameTitle').textContent = 'Finde das Pferd! 🐴';
+    area.classList.add('grid-mode'); // CSS-Grid aktivieren
+
+    let cellSize = 28; // Größe jeder Zelle in Pixel
+
+    // Berechne, wie viele Spalten und Zeilen in den Bereich passen
+    let w    = area.clientWidth  || 340;
+    let h    = area.clientHeight || 380;
+    let cols = Math.floor(w / cellSize);
+    let rows = Math.floor(h / cellSize);
+    let total = cols * rows; // Gesamtzahl der Zellen
+
+    // CSS-Grid auf die berechnete Spalten- und Zeilenzahl einstellen
+    area.style.gridTemplateColumns = `repeat(${cols}, ${cellSize}px)`;
+    area.style.gridAutoRows = cellSize + 'px';
+
+    // Liste aller möglichen Ablenkungstiere
+    let animals = ['🐄','🐂','🐖','🐑','🐐','🐓','🐔','🐶','🐱','🐹','🐰',
+                   '🐸','🐢','🐘','🦁','🐯','🐻','🐨','🦊','🐺','🐦','🐧',
+                   '🦉','🦅','🐟','🐠','🐙','🦀','🦞','🐍','🐇','🦆'];
+
+    // Zufällige Position für das echte Pferd auswählen
+    let horseIdx = Math.floor(Math.random() * total);
+
+    // Alle Zellen erstellen und mit Emojis füllen
+    for (let i = 0; i < total; i++) {
+      // Pferd an der zufälligen Position, sonst ein zufälliges Tier
+      let a = (i === horseIdx)
+        ? '🐴'
+        : animals[Math.floor(Math.random() * animals.length)];
+
+      let span = document.createElement('span');
+      span.className   = 'cell';
+      span.textContent = a;
+
+      // Klick-Handler: Pferd gefunden → Level gewonnen, sonst Hinweis
+      span.onclick = () => {
+        if (a === '🐴') winLevel();
+        else setMsg('Nicht das Pferd – weitersuchen! 🔍');
+      };
+
+      area.appendChild(span);
+    }
+  }
+
+
+  /* =====================================================
+     LEVEL 2: FANG DAS PFERD
+     Das Pferd bewegt sich zufällig im Spielbereich.
+     Die Spielerin muss es 5 Mal anklicken.
+     Mit jedem Treffer wird es kleiner, schneller, und
+     es kommen mehr Ablenkungstiere dazu.
+  ===================================================== */
+  function setupLevel2(area) {
+    document.getElementById('gameTitle').textContent = 'Fang das Pferd! 🐎';
+    catchCount = 0;
+
+    // Fortschritts-Punkte (5 Dots) einblenden
+    let wrap = document.getElementById('progress-wrap');
+    wrap.style.display = 'flex';
+    updateDots();
+
+    startCatch(area);
+  }
+
+  // Aktualisiert die 5 Fortschritts-Punkte und das Label darunter
+  function updateDots() {
+    let d = document.getElementById('dots');
+    d.innerHTML = '';
+    for (let i = 0; i < 5; i++) {
+      let s = document.createElement('span');
+      // Punkte bis catchCount sind lila (filled), der Rest grau
+      s.className = 'dot' + (i < catchCount ? ' filled' : '');
+      d.appendChild(s);
+    }
+    document.getElementById('catchLabel').textContent = catchCount + '/5 gefangen';
+  }
+
+  // Startet eine neue Fang-Runde (nach jedem Treffer neu aufgerufen)
+  function startCatch(area) {
+    area.innerHTML = ''; // Vorherige Elemente entfernen
+
+    if (catchCount >= 5) { winLevel(); return; } // Alle 5 gefangen → gewonnen!
+
+    setMsg('Klick auf das Pferd!');
+
+    // Je nach Anzahl gefangener Pferde: mehr Ablenkungstiere
+    let fakeCount = [0, 0, 1, 2, 3][Math.min(catchCount, 4)];
+    // Pferd wird kleiner mit jedem Treffer
+    let size      = [40, 32, 28, 24, 20][Math.min(catchCount, 4)] + 'px';
+    // Pferd bewegt sich schneller mit jedem Treffer (kleinere Zahl = kürzer warten)
+    let speed     = [1000, 800, 650, 550, 450][Math.min(catchCount, 4)];
+
+    // Hilfsfunktion: setzt ein Element an eine zufällige Position im Spielbereich
+    function rPos(el) {
+      let aw = area.clientWidth  - 50;
+      let ah = area.clientHeight - 50;
+      el.style.left = Math.random() * aw + 'px';
+      el.style.top  = Math.random() * ah + 'px';
+    }
+
+    // Das echte Pferd erstellen
+    let horse = document.createElement('div');
+    horse.className   = 'horse-catch';
+    horse.textContent = '🐎';
+    horse.style.fontSize = size;
+    area.appendChild(horse);
+    rPos(horse);
+
+    // Klick auf das Pferd → Treffer registrieren
+    horse.onclick = () => {
+      clearInterval(catchInterval); // Bewegungs-Interval stoppen
+      catchCount++;
+      updateDots(); // Fortschritts-Punkte aktualisieren
+      if (catchCount >= 5) {
+        winLevel();
+      } else {
+        setMsg('Gut gemacht! ' + catchCount + '/5');
+        setTimeout(() => startCatch(area), 400); // kurze Pause, dann nächste Runde
+      }
+    };
+
+    // Das Pferd bewegt sich in regelmäßigen Abständen zufällig
+    catchInterval = setInterval(() => rPos(horse), speed);
+
+    // Ablenkungstiere (🐗) erstellen und ebenfalls bewegen
+    for (let f = 0; f < fakeCount; f++) {
+      let fake = document.createElement('div');
+      fake.className   = 'fake-animal';
+      fake.textContent = '🐗';
+      fake.style.fontSize = size;
+      area.appendChild(fake);
+      rPos(fake);
+
+      // Fake-Tier bewegt sich etwas schneller als das echte Pferd
+      setInterval(() => rPos(fake), speed - 100);
+
+      // Klick auf ein Fake-Tier → Hinweismeldung
+      fake.onclick = () => setMsg('Falsches Tier! 🐗');
+    }
+  }
+
+
+  /* =====================================================
+     LEVEL 3: REITE DAS PFERD
+     Das Pferd steht unten in einer von 3 Spuren.
+     Hindernisse fallen von oben.
+     Die Spielerin muss 20 Sekunden überleben.
+     Steuerung: Pfeiltasten (Desktop) oder Klick (Mobile).
+  ===================================================== */
+  function setupLevel3(area) {
+    document.getElementById('gameTitle').textContent = 'Weiche den Hindernissen aus! 🐎';
+
+    // Startzustand zurücksetzen
+    survivalTime = 0;
+    gameRunning  = true;
+    level3Done   = false;
+    spawnSpeed   = 900;
+    lane         = 1; // Startposition: mittlere Spur
+
+    setTimer(0);
+
+    // Pferd-Element erstellen und in den Spielbereich einfügen
+    let hw = document.createElement('div');
+    hw.id          = 'horse-l3';
+    hw.textContent = '🐎';
+    area.appendChild(hw);
+    horseEl = hw;
+    updateLane3(area); // Pferd in die mittlere Spur setzen
+
+    // Tastatur-Steuerung aktivieren (Pfeiltasten links/rechts)
+    document.addEventListener('keydown', keyHandler);
+
+    // Klick/Tap auf den Spielbereich: Spur wechseln (links→mitte→rechts→links…)
+    area.onclick = () => { lane = (lane + 1) % 3; updateLane3(area); };
+
+    setMsg('Pfeiltasten oder Tippen zum Ausweichen!');
+
+    // Mögliche Hindernis-Emojis
+    let obs = ['🌵', '🪨', '🐄'];
+
+    // Funktion: ein neues Hindernis erzeugen und von oben fallen lassen
+    function spawnObs() {
+      if (!gameRunning) return; // Kein neues Hindernis wenn Spiel vorbei
+
+      let ob = document.createElement('div');
+      ob.className = 'obs';
+
+      // Zufälliges Hindernis und zufällige Spur
+      ob.textContent = obs[Math.floor(Math.random() * obs.length)];
+      let obsLane = Math.floor(Math.random() * 3);
+      let w = area.clientWidth;
+
+      // Horizontale Position je nach Spur (3 gleich breite Spuren)
+      ob.style.left = [w * .1, w * .42, w * .74][obsLane] + 'px';
+      area.appendChild(ob);
+
+      let pos = -50; // Startposition: knapp oberhalb des Spielbereichs
+
+      // Interval: bewegt das Hindernis nach unten (alle 20ms = ca. 50fps)
+      let mv = setInterval(() => {
+        if (!gameRunning) { clearInterval(mv); ob.remove(); return; }
+
+        pos += 7; // 7 Pixel nach unten pro Frame
+        ob.style.top = pos + 'px';
+
+        // Kollisionserkennung: vergleicht die Positionen von Pferd und Hindernis
+        let h = horseEl.getBoundingClientRect();
+        let o = ob.getBoundingClientRect();
+        let kollision = h.left < o.right && h.right > o.left &&
+                        h.top  < o.bottom && h.bottom > o.top;
+
+        if (kollision) {
+          // Kollision! Spiel beenden.
+          gameRunning = false;
+          clearInterval(mv);
+          clearInterval(timerInterval);
+          clearTimeout(spawnTimeout);
+          setMsg('Verloren! Zeit: ' + survivalTime + 's – nochmal versuchen!');
+        }
+
+        // Hindernis aus dem DOM entfernen, wenn es unten raus ist
+        if (pos > area.clientHeight + 50) { clearInterval(mv); ob.remove(); }
+
+      }, 20);
+
+      // Nächstes Hindernis nach spawnSpeed Millisekunden spawnen.
+      // spawnSpeed wird kleiner → Hindernisse kommen immer schneller.
+      spawnSpeed = Math.max(300, spawnSpeed - 8);
+      spawnTimeout = setTimeout(spawnObs, spawnSpeed);
+    }
+
+    spawnObs(); // Erstes Hindernis starten
+
+    // Sekunden-Timer: zählt hoch und prüft ob 20s erreicht sind
+    timerInterval = setInterval(() => {
+      if (!gameRunning) { clearInterval(timerInterval); return; }
+
+      survivalTime++;
+      setTimer(survivalTime);
+
+      // 20 Sekunden überlebt → Level als bestanden markieren
+      // Das Spiel läuft danach weiter (für den Highscore-Spaß)!
+      if (survivalTime >= 20 && !level3Done) {
+        level3Done      = true;
+        completed[2]    = true;
+        updateLevelCards();
+        setMsg('20s überlebt – Level bestanden! 🏆 Reite weiter!');
+      }
+    }, 1000);
+  }
+
+  // Tastatur-Handler für Level 3 (als eigene Funktion, damit er sauber entfernt werden kann)
+  function keyHandler(e) {
+    let area = document.getElementById('gameArea');
+    if (e.key === 'ArrowLeft')  { lane = Math.max(0, lane - 1); updateLane3(area); }
+    if (e.key === 'ArrowRight') { lane = Math.min(2, lane + 1); updateLane3(area); }
+  }
+
+  // Pferd in die aktuelle Spur setzen (3 Spuren: links, mitte, rechts)
+  function updateLane3(area) {
+    if (!horseEl) return;
+    let w = area.clientWidth;
+    // Pferd wird auf 10%, 42% oder 74% der Breite positioniert
+    horseEl.style.left = [w * .1, w * .42, w * .74][lane] + 'px';
+  }
+
+
+  /* =====================================================
+     LEVEL GEWONNEN
+     Markiert das aktuelle Level als abgeschlossen,
+     aktualisiert die Karten und kehrt zur Level-Auswahl zurück.
+  ===================================================== */
+  function winLevel() {
+    completed[currentLevel - 1] = true; // Index 0-basiert: Level 1 → Index 0
+    updateLevelCards();
+    setMsg('Level bestanden! 🎉');
+    setTimeout(() => showLevels(), 1000); // kurze Pause, dann zurück
+  }
+
+
+  /* =====================================================
+     ENTER-TASTE im Namensfeld
+     Ermöglicht das Bestätigen des Namens mit der Enter-Taste,
+     ohne auf den Button klicken zu müssen.
+  ===================================================== */
+  document.getElementById('nameInput').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') doName();
+  });
+
+</script>
+</body>
+</html>
