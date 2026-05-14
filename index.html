@@ -572,28 +572,35 @@ function initLevel3(area, title) {
    LEVEL 4 – QUIZ (10 Fragen)
 =========================== */
 const quizData = [
-  // Original 5
-  { q: 'Wie lange dauert die Trächtigkeit einer Stute?',
-    answers: ['ca. 7 Monate', 'ca. 11 Monate', 'ca. 14 Monate', 'ca. 9 Monate'], correct: 1 },
-  { q: 'Was bezeichnet man als "Schimmel" bei Pferden?',
-    answers: ['Weißes Fell von Geburt an', 'Fell das sich mit dem Alter aufhellt', 'Eine Pferdeerkrankung', 'Einen Gangartfehler'], correct: 1 },
-  { q: 'Welche ist die schnellste natürliche Gangart des Pferdes?',
-    answers: ['Trab', 'Schritt', 'Galopp', 'Tölt'], correct: 2 },
-  { q: 'Was ist ein "Huf"?',
-    answers: ['Die Mähne des Pferdes', 'Der Hornschuh am Fuß des Pferdes', 'Ein Satteltyp', 'Die Brust des Pferdes'], correct: 1 },
-  { q: 'Welche Pferderasse stammt ursprünglich aus Island?',
-    answers: ['Haflinger', 'Araber', 'Isländer', 'Trakehner'], correct: 2 },
-  // 5 neue
-  { q: 'Wie nennt man ein männliches, kastriertes Pferd?',
-    answers: ['Hengst', 'Wallach', 'Fohlen', 'Stute'], correct: 1 },
-  { q: 'Was versteht man unter "Dressurreiten"?',
-    answers: ['Springen über Hindernisse', 'Geländereiten im freien Gelände', 'Harmonisches Zusammenspiel von Reiter und Pferd', 'Pferderennen auf der Rennbahn'], correct: 2 },
-  { q: 'Wie viele Hufe hat ein Pferd?',
-    answers: ['2', '6', '4', '8'], correct: 2 },
-  { q: 'Was ist ein "Fohlen"?',
-    answers: ['Ein altes Pferd', 'Ein Jungtier bis ca. 1 Jahr', 'Eine besondere Pferderasse', 'Ein weibliches Pferd'], correct: 1 },
-  { q: 'Wie nennt man den Schritt-Gang, bei dem alle vier Beine nacheinander aufgesetzt werden?',
-    answers: ['Trab', 'Schritt', 'Galopp', 'Passage'], correct: 1 },
+  { q: 'Wie viele Wirbel hat die Wirbelsäule eines Pferdes?',
+    answers: ['36 Wirbel', '54 Wirbel', '42 Wirbel', '28 Wirbel'], correct: 1 },
+
+  { q: 'Was versteht man unter "Kolik" beim Pferd?',
+    answers: ['Eine Augenkrankheit', 'Bauchschmerzen / Verdauungsstörung', 'Ein Hufproblem', 'Eine Atemwegserkrankung'], correct: 1 },
+
+  { q: 'Was ist die "Piaffe"?',
+    answers: ['Ein Sprung über ein Hindernis', 'Trabähnliche Bewegung auf der Stelle', 'Ein Satteltyp aus Frankreich', 'Eine Zäumungsart'], correct: 1 },
+
+  { q: 'Welche Pferderasse ist bekannt für ihren Fünften Gang, den "Tölt"?',
+    answers: ['Lusitano', 'Appaloosa', 'Isländer', 'Andalusier'], correct: 2 },
+
+  { q: 'Was bezeichnet der Begriff "Vorhand" beim Pferd?',
+    answers: ['Die Hinterhand mit Kruppe', 'Kopf, Hals, Schulter und Vorderbeine', 'Die Flankenregion', 'Den Bereich um den Bauch'], correct: 1 },
+
+  { q: 'Wie nennt man die Lehre von der korrekten Bewegung und Ausbildung des Pferdes?',
+    answers: ['Hippologie', 'Hippokratik', 'Equidologie', 'Dressurologie'], correct: 0 },
+
+  { q: 'Was ist ein "Springgurt" beim Reiten?',
+    answers: ['Ein Halfter mit Schnalle', 'Ein Gurt der den Sattel fixiert und dem Reiter Halt gibt', 'Ein Sprunghilfsmittel für Hindernisse', 'Eine Bandage für den Huf'], correct: 1 },
+
+  { q: 'Welche Olympische Reitsportdisziplin gibt es NICHT?',
+    answers: ['Dressur', 'Voltigieren', 'Vielseitigkeit', 'Springreiten'], correct: 1 },
+
+  { q: 'Was bedeutet "auf der Hinterhand reiten"?',
+    answers: ['Das Pferd rückwärts reiten', 'Das Pferd trägt mehr Gewicht auf den Hinterbeinen', 'Nur mit den Schenkeln reiten', 'Ohne Sattel reiten'], correct: 1 },
+
+  { q: 'Wie nennt man den Fachmann, der Pferde beschlägt und Hufe pflegt?',
+    answers: ['Tierarzt', 'Pferdewirt', 'Hufschmied', 'Sattler'], correct: 2 },
 ];
 
 function initLevel4(area, title) {
